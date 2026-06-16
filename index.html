@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClowAi1V</title>
+
+<!-- Firebase SDKs v10.7.1 -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+</head>
+
+<body class="light">
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <img src="https://i.postimg.cc/Wb8c2DFr/file-00000000974071f58a753a2f8b810e7c.png" alt="ClowAi Logo">
+        <h1>Welcome to ClowAi1V</h1>
+        <p>Sign in to continue</p>
+      </div>
+      
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="loginEmail" placeholder="Email" required>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="loginPassword" placeholder="Password" required>
+        </div>
+        <button type="submit" class="auth-btn">Sign In</button>
+        <p class="toggle-text">Don't have an account? <span onclick="toggleAuth()">Sign Up</span></p>
+        <div class="divider"><span>or</span></div>
+        <button type="button" class="google-btn" onclick="googleSignIn()">
+          <i class="fab fa-google"></i> Sign in with Google
+        </button>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form id="signupForm" class="auth-form" style="display:none;">
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="signupName" placeholder="Full Name" required>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="signupEmail" placeholder="Email" required>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="signupPassword" placeholder="Password (6+ characters)" required minlength="6">
+        </div>
+        <button type="submit" class="auth-btn">Create Account</button>
+        <p class="toggle-text">Already have an account? <span onclick="toggleAuth()">Sign In</span></p>
+        <div class="divider"><span>or</span></div>
+        <button type="button" class="google-btn" onclick="googleSignIn()">
+          <i class="fab fa-google"></i> Sign up with Google
+        </button>
+      </form>
+
+      <!-- Forgot Password -->
+      <p class="forgot-password" id="forgotPasswordLink" onclick="showForgotPassword()">Forgot Password?</p>
+      
+      <!-- Forgot Password Form -->
+      <form id="forgotPasswordForm" class="auth-form" style="display:none;">
+        <h3>Reset Password</h3>
+        <p class="reset-info">Enter your email to receive a password reset link.</p>
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="resetEmail" placeholder="Email" required>
+        </div>
+        <button type="submit" class="auth-btn">Send Reset Link</button>
+        <p class="toggle-text"><span onclick="toggleAuth()">Back to Sign In</span></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (Hidden until login) -->
+<div id="mainApp" style="display:none;">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button onclick="toggleMenu()" class="menuBtn" title="Menu">☰</button>
+      <div class="logo">
+        <img src="https://i.postimg.cc/Wb8c2DFr/file-00000000974071f58a753a2f8b810e7c.png" alt="ClowAi Logo">
+        <span>ClowAi1V</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button onclick="toggleTheme()" class="themeBtn" title="Toggle theme">🌙</button>
+      <div class="user-menu" onclick="toggleUserMenu()">
+        <img id="userAvatar" src="https://i.postimg.cc/Wb8c2DFr/file-00000000974071f58a753a2f8b810e7c.png" class="user-avatar" alt="User">
+        <span id="userName" class="user-name">User</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div id="userDropdown" class="user-dropdown">
+        <a href="#" onclick="showProfile()"><i class="fas fa-user-circle"></i> My Profile</a>
+        <a href="#" onclick="signOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR OVERLAY -->
+  <div id="sidebarOverlay" onclick="closeMenu()"></div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h3>Chat History</h3>
+      <button onclick="closeMenu()" class="close-sidebar">✕</button>
+    </div>
+    <button onclick="newChat()" class="new-chat-btn"><i class="fas fa-plus"></i> New Chat</button>
+    <button onclick="clearChat()" class="clear-chat-btn"><i class="fas fa-trash-alt"></i> Clear Current Chat</button>
+    <div class="sidebar-divider"></div>
+    <div id="chatList"></div>
+    <div class="sidebar-footer">
+      <p>Developed by Hemat</p>
+      <p class="version">v1.0.0</p>
+    </div>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div id="chat">
+    <div class="welcome-message">
+      <img src="https://i.postimg.cc/Wb8c2DFr/file-00000000974071f58a753a2f8b810e7c.png" class="welcome-logo" alt="ClowAi">
+      <h2>How can I help you today?</h2>
+      <div class="suggestions">
+        <div class="suggestion-card" onclick="setInput('Write a poem about coding')">
+          <i class="fas fa-pen"></i> Write a poem
+        </div>
+        <div class="suggestion-card" onclick="setInput('Explain quantum computing simply')">
+          <i class="fas fa-atom"></i> Explain a concept
+        </div>
+        <div class="suggestion-card" onclick="setInput('Help me debug my JavaScript code')">
+          <i class="fas fa-code"></i> Debug code
+        </div>
+        <div class="suggestion-card" onclick="setInput('Tell me an interesting fun fact')">
+          <i class="fas fa-lightbulb"></i> Fun fact
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT AREA -->
+  <div class="bottom">
+    <input type="file" id="fileInput" hidden>
+    <input type="file" id="imgInput" hidden accept="image/*">
+    
+    <button onclick="document.getElementById('fileInput').click()" class="attach-btn" title="Attach file">
+      <i class="fas fa-paperclip"></i>
+    </button>
+    <button onclick="document.getElementById('imgInput').click()" class="attach-btn" title="Attach image">
+      <i class="fas fa-image"></i>
+    </button>
+    
+    <textarea id="input" rows="1" placeholder="Message ClowAi1V..."></textarea>
+    
+    <button onclick="sendMessage()" class="send-btn" title="Send message">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+  </div>
+
+</div>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeProfile()">&times;</span>
+    <h2>My Profile</h2>
+    <div class="profile-info">
+      <img id="profileAvatar" src="https://i.postimg.cc/Wb8c2DFr/file-00000000974071f58a753a2f8b810e7c.png" class="profile-avatar" alt="Profile">
+      <h3 id="profileName">User Name</h3>
+      <p id="profileEmail">user@email.com</p>
+      <button onclick="editProfile()" class="auth-btn">Edit Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html> 
